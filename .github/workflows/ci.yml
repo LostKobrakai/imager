@@ -12,6 +12,7 @@ jobs:
     env:
       MIX_ENV: test
       THUMBOR_ENDPOINT: "http://localhost:8080/"
+      THUMBOR_HOST_TYPE: "CI"
 
     strategy:
       fail-fast: false
@@ -30,7 +31,7 @@ jobs:
         image: minimalcompact/thumbor
         ports:
           - 8080:80
-          
+
     steps:
       - uses: actions/checkout@v3
 

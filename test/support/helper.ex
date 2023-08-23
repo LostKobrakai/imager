@@ -31,6 +31,7 @@ defmodule Imager.Helper do
         case host do
           :local -> "localhost"
           :docker -> "host.docker.internal"
+          :ci -> "172.17.0.1"
         end,
       port: 4001,
       path: Path.join(["/", "public", path])
