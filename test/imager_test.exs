@@ -29,6 +29,68 @@ defmodule ImagerTest do
     end
   end
 
+  describe "secret handling" do
+    test "success if secret is valid" do
+      thumbor_path = %ThumborPath{
+        source: "https://foto.space.kobrakai.de/site/assets/files/1030/20130322-_ben8030.jpg",
+        size: {300, 400}
+      }
+
+      url =
+        URI.parse("http://localhost:4001")
+        |> Map.put(:path, ThumborPath.build(thumbor_path, "secret"))
+        |> Map.put(:query, Plug.Conn.Query.encode(%{secret: "secret"}))
+        |> URI.to_string()
+
+      assert {:ok, %{status: 200}} = Finch.request(Finch.build(:get, url), Imager.Finch)
+    end
+
+    test "success if no secret is expected, but provided" do
+      thumbor_path = %ThumborPath{
+        source: "https://foto.space.kobrakai.de/site/assets/files/1030/20130322-_ben8030.jpg",
+        size: {300, 400}
+      }
+
+      url =
+        URI.parse("http://localhost:4001")
+        |> Map.put(:path, ThumborPath.build(thumbor_path, "secret"))
+        |> Map.put(:query, Plug.Conn.Query.encode(%{secret: nil}))
+        |> URI.to_string()
+
+      assert {:ok, %{status: 200}} = Finch.request(Finch.build(:get, url), Imager.Finch)
+    end
+
+    test "not accepted if secret is expected but missing" do
+      thumbor_path = %ThumborPath{
+        source: "https://foto.space.kobrakai.de/site/assets/files/1030/20130322-_ben8030.jpg",
+        size: {300, 400}
+      }
+
+      url =
+        URI.parse("http://localhost:4001")
+        |> Map.put(:path, ThumborPath.build(thumbor_path, nil))
+        |> Map.put(:query, Plug.Conn.Query.encode(%{secret: "secret"}))
+        |> URI.to_string()
+
+      assert {:ok, %{status: 403}} = Finch.request(Finch.build(:get, url), Imager.Finch)
+    end
+
+    test "not accepted if secret is incorrect" do
+      thumbor_path = %ThumborPath{
+        source: "https://foto.space.kobrakai.de/site/assets/files/1030/20130322-_ben8030.jpg",
+        size: {300, 400}
+      }
+
+      url =
+        URI.parse("http://localhost:4001")
+        |> Map.put(:path, ThumborPath.build(thumbor_path, "othersecret"))
+        |> Map.put(:query, Plug.Conn.Query.encode(%{secret: "secret"}))
+        |> URI.to_string()
+
+      assert {:ok, %{status: 403}} = Finch.request(Finch.build(:get, url), Imager.Finch)
+    end
+  end
+
   describe "filetype png" do
     test "default size", %{tmp_dir: tmp_dir} do
       thumbor_path = %ThumborPath{

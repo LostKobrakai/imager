@@ -6,10 +6,17 @@ defmodule Imager.Endpoint do
 
   def run(conn, _) do
     plug_opts =
-      case conn.query_params["stream"] do
-        "true" -> [http_adapter: Imager.FinchAdapter, stream: true]
-        _ -> [http_adapter: Imager.FinchAdapter, stream: false]
-      end
+      Enum.reduce(conn.query_params, [http_adapter: Imager.FinchAdapter, secret: nil], fn
+        {"stream", "true"}, acc ->
+          Keyword.put(acc, :stream, true)
+
+        # Don't do it like that in production!
+        {"secret", secret}, acc when byte_size(secret) > 0 ->
+          Keyword.put(acc, :secret, secret)
+
+        _, acc ->
+          acc
+      end)
 
     Plug.run(conn, [{Imager, plug_opts}])
   end

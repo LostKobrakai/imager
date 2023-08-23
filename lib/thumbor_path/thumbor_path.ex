@@ -1,9 +1,31 @@
 defmodule Imager.ThumborPath do
-  #   @external_resource "README.md"
-  #   @moduledoc "README.md"
-  #              |> File.read!()
-  #              |> String.split("<!-- MDOC !-->")
-  #              |> Enum.fetch!(1)
+  @moduledoc """
+  Struct representation of a thumbor formatter path.
+
+  Includes APIs to encode the struct to a path/url or parse a path into the struct.
+
+  ## Documentation
+
+  https://thumbor.readthedocs.io/en/latest/usage.html#image-endpoint
+
+  ## Usage
+
+      iex> secret = "abcdef" # or `nil` for unsafe requests
+      iex>
+      iex> path =
+      ...>   %Imager.ThumborPath{
+      ...>     source: "https://source.unsplash.com/TCpfPxKPOvk/800x800",
+      ...>     crop: {{100, 100}, {750, 750}},
+      ...>     size: {200, 200}
+      ...>   }
+      ...>   |> Imager.ThumborPath.build(secret)
+      iex>
+      iex> URI.parse("https://thumbor.example.com/")
+      ...> |> Map.put(:path, path)
+      ...> |> URI.to_string()
+      "https://thumbor.example.com/A0LrsiL0V_fUSCx_ggL6udnRTfE=/100x100:750x750/200x200/https%3A%2F%2Fsource.unsplash.com%2FTCpfPxKPOvk%2F800x800"
+
+  """
 
   alias Imager.ThumborPath.Encoder
   alias Imager.ThumborPath.Parser

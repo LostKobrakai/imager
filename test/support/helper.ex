@@ -16,11 +16,14 @@ defmodule Imager.Helper do
     endpoint = Keyword.fetch!(opts, :endpoint)
     force = Keyword.get(opts, :force, false)
     stream = Keyword.get(opts, :stream, false)
+    secret = Keyword.get(opts, :secret, nil)
+
+    query_params = %{stream: stream, secret: secret}
 
     url =
       URI.parse(endpoint)
       |> Map.put(:path, ThumborPath.build(thumbor_path, nil))
-      |> Map.put(:query, Plug.Conn.Query.encode(%{stream: stream}))
+      |> Map.put(:query, Plug.Conn.Query.encode(query_params))
       |> URI.to_string()
 
     if force or !File.exists?(file) do

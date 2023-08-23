@@ -1,6 +1,29 @@
 defmodule Imager do
   @moduledoc """
-  Documentation for `Imager`.
+  Plug for on demand image processing using thumbors path format.
+
+  ## Caching
+
+  This plug doesn't take care of caching of results, neither due to caching headers
+  on the client, nor with server side caching. If you want to enable caching consider
+  wrapping the plug with dedicated caching libraries like `PlugCacheControl` or `PlugHTTPCache`.
+
+  ### Example
+
+      defmodule MyAppWeb.Imager do
+        use Plug.Builder
+
+        plug PlugCacheControl,
+          directives: [:public, max_age: {12, :hour}, stale_while_revalidate: {3, :hour}]
+
+        plug Imager, http_adapter: MyApp.HTTPAdapter
+      end
+
+  ## Options
+
+  * `:http_adapter` – Module implementing `Imager.HTTP.Adapter`. Required.
+  * `:stream` – Boolean value to enable streamed/chunked responses. Defaults to `false`.
+
   """
   use Plug.Builder
   import Plug.Conn
@@ -15,7 +38,8 @@ defmodule Imager do
   def init(opts) do
     %{
       http_adapter: Keyword.fetch!(opts, :http_adapter),
-      stream: Keyword.get(opts, :stream, false)
+      stream: Keyword.get(opts, :stream, false),
+      secret: Keyword.fetch!(opts, :secret)
     }
   end
 
@@ -24,11 +48,12 @@ defmodule Imager do
     conn
     |> assign(:http_adapter, opts.http_adapter)
     |> assign(:stream, opts.stream)
+    |> assign(:secret, opts.secret)
     |> super([])
   end
 
   defp check_hmac(conn, _) do
-    if ThumborPath.valid?(Path.join(conn.path_info), nil && conn.assigns.secret) do
+    if ThumborPath.valid?(Path.join(conn.path_info), conn.assigns.secret) do
       conn
     else
       conn
