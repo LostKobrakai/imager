@@ -1,5 +1,6 @@
 defmodule Imager.ThumborPath.Encoder do
   @moduledoc false
+  require Logger
   alias Imager.ThumborPath
 
   def build(%ThumborPath{} = uri, secret) do
@@ -19,6 +20,12 @@ defmodule Imager.ThumborPath.Encoder do
 
   @doc false
   def build_image_path(%ThumborPath{} = uri) do
+    if uri.trim && uri.crop do
+      Logger.info(
+        "Encoding ThumborPath with trim and crop set. Crop will be overwritten by thumbor or complient servers."
+      )
+    end
+
     commands =
       [
         if(uri.meta, do: "meta", else: nil),

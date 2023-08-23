@@ -1,6 +1,10 @@
 defmodule Imager.Endpoint do
   use Plug.Builder
 
+  plug Plug.Static,
+    at: "/public",
+    from: "test/fixtures"
+
   plug :fetch_query_params
   plug :run
 

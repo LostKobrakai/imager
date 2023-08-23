@@ -81,7 +81,8 @@ defmodule Imager do
     image =
       conn.assigns.source
       |> Image.from_binary!()
-      |> apply_crop(thumbor_path.crop)
+      |> apply_trim(thumbor_path.trim)
+      |> apply_crop(thumbor_path.trim, thumbor_path.crop)
       |> apply_size(thumbor_path.size, thumbor_path)
 
     if conn.assigns.stream do
@@ -99,11 +100,24 @@ defmodule Imager do
     end
   end
 
-  defp apply_crop(image, {{ax, ay}, {bx, by}}) do
+  defp apply_trim(image, :top_left) do
+    case Image.trim(image, background: Image.get_pixel!(image, 0, 0), threshold: 10) do
+      {:ok, img} -> img
+      {:error, {Image.Error, "Could not find anything to trim"}} -> image
+      {:error, reason} -> raise Image.Error, reason
+    end
+  end
+
+  defp apply_trim(image, nil) do
+    image
+  end
+
+  # Trim overwrites crop (both tech. crop)
+  defp apply_crop(image, nil, {{ax, ay}, {bx, by}}) do
     Image.crop!(image, [{ax, ay}, {bx, ay}, {bx, by}, {ax, by}])
   end
 
-  defp apply_crop(image, _) do
+  defp apply_crop(image, _, _) do
     image
   end
 

@@ -6,10 +6,36 @@ defmodule Imager.Helper do
     Application.fetch_env!(:imager, :thumbor_endpoint)
   end
 
+  def thumbor_host_type do
+    Application.fetch_env!(:imager, :thumbor_host_type)
+  end
+
   def paths(root, source) do
     for key <- [:thumbor, :imager, :compare], into: %{} do
       {key, Path.join(root, "#{key}." <> Path.basename(source))}
     end
+  end
+
+  def full_source(thumbor_path, :thumbor) do
+    %ThumborPath{thumbor_path | source: url(thumbor_host_type(), thumbor_path.source)}
+  end
+
+  def full_source(thumbor_path, :imager) do
+    %ThumborPath{thumbor_path | source: url(:local, thumbor_path.source)}
+  end
+
+  defp url(host, path) do
+    %URI{
+      scheme: "http",
+      host:
+        case host do
+          :local -> "localhost"
+          :docker -> "host.docker.internal"
+        end,
+      port: 4001,
+      path: Path.join(["/", "public", path])
+    }
+    |> URI.to_string()
   end
 
   def fetch(thumbor_path, file, opts \\ []) do
