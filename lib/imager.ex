@@ -45,10 +45,16 @@ defmodule Imager do
 
   @impl true
   def call(conn, opts) do
+    secret =
+      case opts.secret do
+        secret when is_function(secret, 0) -> secret.()
+        secret -> secret
+      end
+
     conn
     |> assign(:http_adapter, opts.http_adapter)
     |> assign(:stream, opts.stream)
-    |> assign(:secret, opts.secret)
+    |> assign(:secret, secret)
     |> super([])
   end
 
